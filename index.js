@@ -20,6 +20,14 @@ exports.eejsBlock_htmlHead = function (hook_name, args, cb){
 
 exports.registerRoute = function (hook_name, args, cb) {
 
+  args.app.get('/p/*/rss', function(req, res){
+    /*Sanity is in the crack of time*/
+    var path=req.url.split("/");
+    var padId=path[2];
+    var padURL = req.protocol + "://" + req.get('host') + "/p/" +padId;
+    res.redirect('/p/'+padId+'/feed');
+  });
+
   args.app.get('/p/*/feed.rss', function(req, res){
     /*Sanity is in the crack of time*/
     var path=req.url.split("/");
