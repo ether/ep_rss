@@ -1,0 +1,16 @@
+{
+  "name": "ep_rss",
+  "description": "Get an RSS feed of pad updates",
+  "version": "0.0.1",
+  "author": {
+    "name": "John McLear",
+    "email": "john@mclear.co.uk",
+    "url": "http://mclear.co.uk"
+  },
+  "contributors": [],
+  "peerDependencies": {
+  },
+  "engines": {
+    "node": ">= 0.4.1"
+  }
+}

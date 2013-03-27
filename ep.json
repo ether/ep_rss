@@ -1,0 +1,11 @@
+{
+ "parts":[
+    {
+      "name": "ep_rss",
+      "hooks": {
+        "padUpdate": "ep_rss/update",
+        "eejsBlock_embedPopup": "ep_rss/client:eejsBlock_embedPopup"
+      }
+    }
+  ]
+}
