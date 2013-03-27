@@ -3,8 +3,8 @@ var async = require('ep_etherpad-lite/node_modules/async');
 
 exports.registerRoute = function (hook_name, args, cb) {
 
-  args.app.get('/search', function(req, res) {
-
+  args.app.get('*/atom.xml', function(req, res) {
+/*
     var searchString = req.query["query"];
     var result = {};
 
@@ -26,7 +26,8 @@ exports.registerRoute = function (hook_name, args, cb) {
       });
 
     });
+*/
+    res.send("RSS feed coming soon");
 
   });
-
 };
