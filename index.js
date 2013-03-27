@@ -1,9 +1,22 @@
 var db = require('ep_etherpad-lite/node/db/DB').db;
 var async = require('ep_etherpad-lite/node_modules/async');
 
+exports.eejsBlock_htmlHead = function (hook_name, args, cb){
+  args.content = args.content + '<link rel="alternate" type="application/rss+xml" title="Pad RSS Feed" href="feed" />';
+  return cb();
+}
+
 exports.registerRoute = function (hook_name, args, cb) {
 
-  args.app.get('*/atom.xml', function(req, res) {
+  console.warn("Registering route")
+  args.app.get('/p/*/feed', function(req, res) {
+    var path=req.url.split("/");
+    var padId=path[2];
+
+    console.warn(padId);
+
+    // has pad been edited in last hour?
+
 /*
     var searchString = req.query["query"];
     var result = {};
