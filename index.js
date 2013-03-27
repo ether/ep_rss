@@ -2,7 +2,16 @@
        ERR = require("ep_etherpad-lite/node_modules/async-stacktrace"),
        API = require('../../src/node/db/API.js'),
      async = require('ep_etherpad-lite/node_modules/async'),
-padManager = require('ep_etherpad-lite/node/db/PadManager');
+padManager = require('ep_etherpad-lite/node/db/PadManager'),
+ settings = require('../../src/node/utils/Settings');
+
+if(!settings.rss){
+  settings.rss = {};
+  console.log("RSS Feed settings have not been configured, this is probably fine as they work out of the box");
+}
+
+var staleTime = settings.rss.staleTime || 300000; // 5 minutes, value should be set in settings
+var feeds = {}; // A nasty global
 
 exports.eejsBlock_htmlHead = function (hook_name, args, cb){
   args.content = args.content + '<link rel="alternate" type="application/rss+xml" title="Pad RSS Feed" href="feed" />';
@@ -10,8 +19,6 @@ exports.eejsBlock_htmlHead = function (hook_name, args, cb){
 }
 
 exports.registerRoute = function (hook_name, args, cb) {
-
-  console.warn("Registering route")
 
   args.app.get('/p/*/feed.rss', function(req, res){
     /*Sanity is in the crack of time*/
@@ -21,7 +28,6 @@ exports.registerRoute = function (hook_name, args, cb) {
     res.redirect('/p/'+padId+'/feed');
   });
 
-
   args.app.get('/p/*/feed', function(req, res) {
     /*Sanity is in the cracks of lime*/
     var fullURL = req.protocol + "://" + req.get('host') + req.url;
@@ -29,24 +35,50 @@ exports.registerRoute = function (hook_name, args, cb) {
     var padId=path[2];
     var padURL = req.protocol + "://" + req.get('host') + "/p/" +padId;
     var dateString = new Date();
+    var isPublished = false;
 
-    var pad;
+    /* When was this pad last edited and should we publish an RSS update? */
     async.series([
-      function(callback){ // Get the pad Text
-        var padText = padManager.getPad(padId, function(err, _pad){
-          pad = _pad;
-          text = safe_tags(pad.text()).replace(/\n/g,"<br/>");
-          ERR(err);
-          callback();
+      function(cb){
+        API.getLastEdited(padId, function(callback, message){
+          var currTS = new Date().getTime();
+          if(currTS - message.lastEdited < staleTime){ 
+            isPublished = isAlreadyPublished(padId, message.lastEdited);
+            if(!isPublished){
+              feeds[padId] = message.lastEdited; // Add it to the timer object
+            }
+            cb();
+          }else{
+            cb();
+          }
         });
       },
 
-      function(callback){ // Append the pad Text to the Body
+      /* Get the pad text */
+      function(cb){ 
+        if(!isPublished){
+          console.warn("here");
+          var padText = padManager.getPad(padId, function(err, _pad){
+            pad = _pad;
+            text = safe_tags(pad.text()).replace(/\n/g,"<br/>");
+            ERR(err);
+            cb();
+          });
+        }else{
+          cb();
+        } 
+      },
 
-        /* Why don't we use EEJS require here?  Well EEJS require isn't ASYNC so on first load
-        it would bring in the .ejs content only and then on second load pad contents would be included..
-        Sorry this is ugly but that's how the plugin FW was designed by @redhog -- bug him for a fix! */
-
+      /* Create a new RSS item */
+      function(cb){
+        if(isPublished){
+          res.send(feeds[padId].feed);
+          cb();
+        }
+          /* Why don't we use EEJS require here?  Well EEJS require isn't ASYNC so on first load
+          it would bring in the .ejs content only and then on second load pad contents would be included..
+          Sorry this is ugly but that's how the plugin FW was designed by @redhog -- bug him for a fix! */
+  
         res.contentType("rss");
         args.content = '<rss xmlns:media="'+fullURL+'" version="2.0">\n';
         args.content += '<channel>\n';
@@ -65,16 +97,23 @@ exports.registerRoute = function (hook_name, args, cb) {
         args.content += '</item>\n';
         args.content += '</channel>\n';
         args.content += '</rss>';
-        res.send(args.content);
-        callback(); // Am I even called?
-      },
+        feeds[padId].feed = args.content;
+        res.send(args.content); // Send it to the requester
+        cb(); // Am I even called?
+
+      },function(){
+        /* Todo - Some error handling */
+      }
     ]);
-
-    // res.send("RSS feed coming soon");
-
   });
 };
 
 function safe_tags(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') ;
+}
+
+function isAlreadyPublished(padId, editTime){
+  if(feeds[padId] == editTime){
+    return true;
+  }
 }
