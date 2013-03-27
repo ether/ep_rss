@@ -43,20 +43,33 @@ exports.registerRoute = function (hook_name, args, cb) {
     var padId=path[2];
     var padURL = req.protocol + "://" + req.get('host') + "/p/" +padId;
     var dateString = new Date();
-    var isPublished = false;
+    var isPublished = false; // is this item already published?
 
     /* When was this pad last edited and should we publish an RSS update? */
     async.series([
       function(cb){
         API.getLastEdited(padId, function(callback, message){
           var currTS = new Date().getTime();
-          if(currTS - message.lastEdited < staleTime){ 
+          if(!feeds[padId]){
+            feeds[padId] = {};
+          }
+
+          if(currTS - message.lastEdited < staleTime){ // was the pad edited within the last 5 minutes?
             isPublished = isAlreadyPublished(padId, message.lastEdited);
-            if(!isPublished){
-              feeds[padId] = message.lastEdited; // Add it to the timer object
+
+            if(!isPublished){ // If it's not already published and it's gone stale
+              feeds[padId].lastEdited = message.lastEdited; // Add it to the timer object
             }
             cb();
+
           }else{
+            if(!feeds[padId].feed){ // If it's not already stored in memory
+              console.debug("Feed not already in memory so writing memory", feeds);
+              isPublished = false;
+              feeds[padId].lastEdited = message.lastEdited; // Add it to the timer object
+            }else{
+              isPublished = true;
+            }
             cb();
           }
         });
@@ -65,7 +78,6 @@ exports.registerRoute = function (hook_name, args, cb) {
       /* Get the pad text */
       function(cb){ 
         if(!isPublished){
-          console.warn("here");
           var padText = padManager.getPad(padId, function(err, _pad){
             pad = _pad;
             text = safe_tags(pad.text()).replace(/\n/g,"<br/>");
@@ -80,34 +92,38 @@ exports.registerRoute = function (hook_name, args, cb) {
       /* Create a new RSS item */
       function(cb){
         if(isPublished){
+          console.debug("Sending RSS from memory for "+padId);
+          res.contentType("rss");
           res.send(feeds[padId].feed);
           cb();
         }
+        else{
+          console.debug("Building RSS for "+padId);
           /* Why don't we use EEJS require here?  Well EEJS require isn't ASYNC so on first load
           it would bring in the .ejs content only and then on second load pad contents would be included..
           Sorry this is ugly but that's how the plugin FW was designed by @redhog -- bug him for a fix! */
-  
-        res.contentType("rss");
-        args.content = '<rss xmlns:media="'+fullURL+'" version="2.0">\n';
-        args.content += '<channel>\n';
-        args.content += '<title>'+padId+'</title>\n';
-        args.content += '<description/>\n';
-        args.content += '<language>en-us</language>\n';
-        args.content += '<pubDate>'+dateString+'</pubDate>\n';
-        args.content += '<lastBuildDate>'+dateString+'</lastBuildDate>\n';
-        args.content += '<item>\n';
-        args.content += '<title>\n';
-        args.content += padId + ' has been changed\n';
-        args.content += '</title>\n';
-        args.content += '<description>\n';
-        args.content += '<![CDATA['+text+']]>\n';
-        args.content += '<link>'+padURL+'</link>\n';
-        args.content += '</item>\n';
-        args.content += '</channel>\n';
-        args.content += '</rss>';
-        feeds[padId].feed = args.content;
-        res.send(args.content); // Send it to the requester
-        cb(); // Am I even called?
+          res.contentType("rss");
+          args.content = '<rss xmlns:media="'+fullURL+'" version="2.0">\n';
+          args.content += '<channel>\n';
+          args.content += '<title>'+padId+'</title>\n';
+          args.content += '<description/>\n';
+          args.content += '<language>en-us</language>\n';
+          args.content += '<pubDate>'+dateString+'</pubDate>\n';
+          args.content += '<lastBuildDate>'+dateString+'</lastBuildDate>\n';
+          args.content += '<item>\n';
+          args.content += '<title>\n';
+          args.content += padId + ' has been changed\n';
+          args.content += '</title>\n';
+          args.content += '<description>\n';
+          args.content += '<![CDATA['+text+']]>\n';
+          args.content += '<link>'+padURL+'</link>\n';
+          args.content += '</item>\n';
+          args.content += '</channel>\n';
+          args.content += '</rss>';
+          feeds[padId].feed = args.content;
+          res.send(args.content); // Send it to the requester
+          cb(); // Am I even called?
+        }
 
       },function(){
         /* Todo - Some error handling */
