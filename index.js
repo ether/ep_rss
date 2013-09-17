@@ -13,6 +13,7 @@ if(!settings.rss){
 var staleTime = settings.rss.staleTime || 300000; // 5 minutes, value should be set in settings
 var feeds = {}; // A nasty global
 
+
 exports.eejsBlock_htmlHead = function (hook_name, args, cb){
   args.content = args.content + '<link rel="alternate" type="application/rss+xml" title="Pad RSS Feed" href="feed" />';
   return cb();
@@ -44,7 +45,7 @@ exports.registerRoute = function (hook_name, args, cb) {
     var padURL = req.protocol + "://" + req.get('host') + "/p/" +padId;
     var dateString = new Date();
     var isPublished = false; // is this item already published?
-
+    
     /* When was this pad last edited and should we publish an RSS update? */
     async.series([
       function(cb){
@@ -53,10 +54,10 @@ exports.registerRoute = function (hook_name, args, cb) {
           if(!feeds[padId]){
             feeds[padId] = {};
           }
-
+          
           if(currTS - message.lastEdited < staleTime){ // was the pad edited within the last 5 minutes?
             isPublished = isAlreadyPublished(padId, message.lastEdited);
-
+            
             if(!isPublished){ // If it's not already published and it's gone stale
               feeds[padId].lastEdited = message.lastEdited; // Add it to the timer object
             }
@@ -64,7 +65,7 @@ exports.registerRoute = function (hook_name, args, cb) {
 
           }else{
             if(!feeds[padId].feed){ // If it's not already stored in memory
-              console.debug("Feed not already in memory so writing memory", feeds);
+              console.debug("RSS Feed not already in memory so writing memory", feeds);
               isPublished = false;
               feeds[padId].lastEdited = message.lastEdited; // Add it to the timer object
             }else{
@@ -86,7 +87,7 @@ exports.registerRoute = function (hook_name, args, cb) {
           });
         }else{
           cb();
-        } 
+        }
       },
 
       /* Create a new RSS item */
@@ -103,19 +104,25 @@ exports.registerRoute = function (hook_name, args, cb) {
           it would bring in the .ejs content only and then on second load pad contents would be included..
           Sorry this is ugly but that's how the plugin FW was designed by @redhog -- bug him for a fix! */
           res.contentType("rss");
-          args.content = '<rss xmlns:media="'+fullURL+'" version="2.0">\n';
+          args.content = '<rss version="2.0" \n';
+          args.content += '   xmlns:content="http://purl.org/rss/1.0/modules/content/"\n';
+          args.content += '   xmlns:atom="http://www.w3.org/2005/Atom"\n';
+          args.content += '>\n';
           args.content += '<channel>\n';
           args.content += '<title>'+padId+'</title>\n';
+          args.content += '<atom:link href="'+fullURL+'" rel="self" type="application/rss+xml" />';
+          args.content += '<link>'+padURL+'</link>\n';
           args.content += '<description/>\n';
           args.content += '<language>en-us</language>\n';
           args.content += '<pubDate>'+dateString+'</pubDate>\n';
           args.content += '<lastBuildDate>'+dateString+'</lastBuildDate>\n';
           args.content += '<item>\n';
           args.content += '<title>\n';
-          args.content += padId + ' has been changed\n';
+          args.content += padId + '\n';
           args.content += '</title>\n';
           args.content += '<description>\n';
           args.content += '<![CDATA['+text+']]>\n';
+          args.content += '</description>\n';
           args.content += '<link>'+padURL+'</link>\n';
           args.content += '</item>\n';
           args.content += '</channel>\n';
@@ -137,7 +144,5 @@ function safe_tags(str) {
 }
 
 function isAlreadyPublished(padId, editTime){
-  if(feeds[padId] == editTime){
-    return true;
-  }
+  return (feeds[padId] == editTime)
 }
