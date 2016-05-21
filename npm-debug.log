@@ -7,10 +7,10 @@
 2 info using npm@2.15.1
 3 info using node@v4.4.4
 4 info git [ 'status', '--porcelain' ]
-5 info preversion ep_rss@0.0.2
+5 info preversion ep_rss@0.0.3
 6 verbose version.write data { name: 'ep_rss',
 6 verbose version.write   description: 'Get an RSS feed of pad updates',
-6 verbose version.write   version: '0.0.2',
+6 verbose version.write   version: '0.0.3',
 6 verbose version.write   author:
 6 verbose version.write    { name: 'John McLear',
 6 verbose version.write      email: 'john@mclear.co.uk',
@@ -19,7 +19,7 @@
 6 verbose version.write   peerDependencies: {},
 6 verbose version.write   engines: { node: '>= 0.4.1' },
 6 verbose version.write   repository: { type: 'git', url: 'https://github.com/JohnMcLear/ep_rss.git' } } to package.json
-7 info version ep_rss@0.0.2
+7 info version ep_rss@0.0.3
 8 info git [ 'add', '/home/jose/ep_rss/package.json' ]
 9 verbose stack Error: Command failed: false add /home/jose/ep_rss/package.json
 9 verbose stack
