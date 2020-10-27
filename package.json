@@ -15,5 +15,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/JohnMcLear/ep_rss.git"
+  },
+  "funding": {
+    "type": "individual",
+    "url": "http://etherpad.org/"
   }
 }
