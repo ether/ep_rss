@@ -8,7 +8,9 @@
     "url": "http://mclear.co.uk"
   },
   "contributors": [],
-  "peerDependencies": {},
+  "peerDependencies": {
+    "ep_etherpad-lite": ">=1.8.6"
+  },
   "engines": {
     "node": ">= 0.4.1"
   },
