@@ -34,6 +34,14 @@ exports.registerRoute = (hookName, args, cb) => {
     res.redirect(`/p/${padId}/feed`);
   });
 
+
+  args.app.get('/p/*/atom.xml', (req, res) => {
+    /* Sanity is in the crack of time*/
+    const path = req.url.split('/');
+    const padId = path[2];
+    res.redirect(`/p/${padId}/feed`);
+  });
+
   args.app.get('/p/*/feed', async (req, res) => {
     /* Sanity is in the cracks of lime*/
     const fullURL = `${req.protocol}://${req.get('host')}${req.url}`;
