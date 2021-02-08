@@ -1,3 +1,5 @@
+![Publish Status](https://github.com/ether/ep_rss/workflows/Node.js%20Package/badge.svg) ![Backend Tests Status](https://github.com/ether/ep_rss/workflows/Backend%20tests/badge.svg)
+
 # Description
 Creates an RSS feed and prefixes it to the end of a pad IE as atom.xml IE http://bacon.com/p/yummi/feed
 
