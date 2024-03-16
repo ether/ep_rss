@@ -1,18 +1,15 @@
 {
   "name": "ep_rss",
   "description": "Get an RSS feed of pad updates",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "author": {
     "name": "John McLear",
     "email": "john@mclear.co.uk",
     "url": "http://mclear.co.uk"
   },
   "contributors": [],
-  "peerDependencies": {
-    "ep_etherpad-lite": ">=1.8.6"
-  },
   "engines": {
-    "node": ">=12.17.0"
+    "node": ">=18.0.0"
   },
   "repository": {
     "type": "git",
@@ -23,9 +20,9 @@
     "url": "https://etherpad.org/"
   },
   "devDependencies": {
-    "eslint": "^8.11.0",
-    "eslint-config-etherpad": "^3.0.9",
-    "typescript": "^4.5.5"
+    "eslint": "^8.57.0",
+    "eslint-config-etherpad": "^4.0.4",
+    "typescript": "^5.4.2"
   },
   "scripts": {
     "lint": "eslint .",
