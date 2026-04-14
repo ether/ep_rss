@@ -1,10 +1,27 @@
+# ep_rss
+
 ![Publish Status](https://github.com/ether/ep_rss/workflows/Node.js%20Package/badge.svg) [![Backend Tests Status](https://github.com/ether/ep_rss/actions/workflows/test-and-release.yml/badge.svg)](https://github.com/ether/ep_rss/actions/workflows/test-and-release.yml)
 
-# Description
-Creates an RSS feed and prefixes it to the end of a pad IE as atom.xml IE http://bacon.com/p/yummi/feed
+Exposes an RSS feed for each pad at `/p/{padId}/feed`.
 
-# Installation
-Just install then click the Share and Embed button to get the RSS feed URL
+## Install
 
-# TODO
-Smarter creation of new items upon modification
+```
+pnpm run plugins i ep_rss
+```
+
+## Settings
+
+Optional stale time (milliseconds before a new RSS item is generated) can be set in `settings.json`:
+
+```json
+"rss": {
+  "staleTime": 300000
+}
+```
+
+Defaults to 5 minutes if not configured.
+
+## License
+
+Apache-2.0
