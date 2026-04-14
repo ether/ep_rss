@@ -66,7 +66,6 @@ exports.registerRoute = (hookName, args, cb) => {
       if (!isPublished) { // If it's not already published and it's gone stale
         feeds[padId].lastEdited = message.lastEdited; // Add it to the timer object
       }
-      cb();
     } else {
       if (!feeds[padId].feed) { // If it's not already stored in memory
         console.debug('RSS Feed not already in memory so writing memory', feeds);
@@ -75,20 +74,16 @@ exports.registerRoute = (hookName, args, cb) => {
       } else {
         isPublished = true;
       }
-      cb();
     }
     if (!isPublished) {
       const pad = await padManager.getPad(padId);
       text = safe_tags(pad.text()).replace(/\n/g, '<br/>');
-    } else {
-      cb();
     }
 
     if (isPublished) {
       console.debug(`Sending RSS from memory for ${padId}`);
       res.contentType('rss');
       res.send(feeds[padId].feed);
-      cb();
     } else {
       console.debug(`Building RSS for ${padId}`);
       res.contentType('rss');
@@ -117,7 +112,6 @@ exports.registerRoute = (hookName, args, cb) => {
       args.content += '</rss>';
       feeds[padId].feed = args.content;
       res.send(args.content); // Send it to the requester
-      cb(); // Am I even called?
     }
   });
   cb();
