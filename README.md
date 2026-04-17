@@ -1,4 +1,4 @@
-# ep_rss
+# RSS Feeds of Pad Changes for Etherpad
 
 ![Publish Status](https://github.com/ether/ep_rss/workflows/Node.js%20Package/badge.svg) [![Backend Tests Status](https://github.com/ether/ep_rss/actions/workflows/test-and-release.yml/badge.svg)](https://github.com/ether/ep_rss/actions/workflows/test-and-release.yml)
 
