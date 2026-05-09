@@ -1,7 +1,7 @@
 {
   "name": "ep_rss",
   "description": "Get an RSS feed of pad updates",
-  "version": "11.0.21",
+  "version": "11.0.22",
   "author": {
     "name": "John McLear",
     "email": "john@mclear.co.uk",
