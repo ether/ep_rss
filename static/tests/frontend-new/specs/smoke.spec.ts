@@ -13,7 +13,9 @@ test.describe('ep_rss', () => {
 
   test('adds RSS to export links', async ({page}) => {
     const pathname = new URL(page.url()).pathname.replace(/\/$/, '');
+    await page.locator('#importexport').click();
     const rssExportLink = page.locator('#exportrssa');
+    await expect(rssExportLink).toBeVisible();
     await expect(rssExportLink).toHaveAttribute('href', `${pathname}/feed`);
     await expect(page.locator('#exportrss')).toContainText('RSS');
   });
