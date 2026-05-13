@@ -17,6 +17,9 @@ test.describe('ep_rss', () => {
     const rssExportLink = page.locator('#exportrssa');
     await expect(rssExportLink).toBeVisible();
     await expect(rssExportLink).toHaveAttribute('href', `${pathname}/feed`);
-    await expect(page.locator('#exportrss')).toContainText('RSS');
+    await expect(rssExportLink).toHaveAttribute(
+        'data-l10n-id', 'ep_rss.importExport.exportrssa.title');
+    await expect(page.locator('#exportrss')).toHaveAttribute(
+        'data-l10n-id', 'ep_rss.importExport.exportrss');
   });
 });
