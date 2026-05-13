@@ -3,6 +3,7 @@
 ![Publish Status](https://github.com/ether/ep_rss/workflows/Node.js%20Package/badge.svg) [![Backend Tests Status](https://github.com/ether/ep_rss/actions/workflows/test-and-release.yml/badge.svg)](https://github.com/ether/ep_rss/actions/workflows/test-and-release.yml)
 
 Exposes an RSS feed for each pad at `/p/{padId}/feed`.
+The RSS feed is also available from the pad import/export dialog.
 
 ## Install
 

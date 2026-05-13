@@ -10,4 +10,11 @@ test.describe('ep_rss', () => {
     const padBody = await getPadBody(page);
     await expect(padBody).toBeVisible();
   });
+
+  test('adds RSS to export links', async ({page}) => {
+    const pathname = new URL(page.url()).pathname.replace(/\/$/, '');
+    const rssExportLink = page.locator('#exportrssa');
+    await expect(rssExportLink).toHaveAttribute('href', `${pathname}/feed`);
+    await expect(page.locator('#exportrss')).toContainText('RSS');
+  });
 });

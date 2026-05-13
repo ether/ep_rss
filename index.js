@@ -1,6 +1,7 @@
 'use strict';
 
 const API = require('ep_etherpad-lite/node/db/API.js');
+const eejs = require('ep_etherpad-lite/node/eejs');
 const padManager = require('ep_etherpad-lite/node/db/PadManager');
 const settings = require('ep_etherpad-lite/node/utils/Settings');
 
@@ -16,6 +17,13 @@ const feeds = {}; // A nasty global
 exports.eejsBlock_htmlHead = (hookName, args, cb) => {
   args.content +=
       '<link rel="alternate" type="application/rss+xml" title="Pad RSS Feed" href="feed" />';
+  return cb();
+};
+
+exports.eejsBlock_exportColumn = (hookName, args, cb) => {
+  const padPath = args.req.path.replace(/\/$/, '');
+  const feedURL = `${padPath}/feed`;
+  args.content += eejs.require('ep_rss/templates/exportColumn.ejs', {feed: feedURL});
   return cb();
 };
 
