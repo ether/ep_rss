@@ -5,7 +5,8 @@
       "hooks": {
         "eejsBlock_htmlHead": "ep_rss/index",
         "expressCreateServer" : "ep_rss/index:registerRoute",
-        "eejsBlock_embedPopup": "ep_rss/client:eejsBlock_embedPopup"
+        "eejsBlock_exportColumn": "ep_rss/client:eejsBlock_exportColumn",
+        "eejsBlock_styles": "ep_rss/client:eejsBlock_styles"
       }
     }
   ]
