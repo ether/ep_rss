@@ -17,13 +17,14 @@ ep_rss/
 ├── client.js
 ├── ep.json
 ├── index.js
+├── locales/
+│   └── en.json
 ├── package.json
 ├── static/
-│   ├── img/
-│   ├── tests/
+│   ├── css/exportColumn.css
+│   └── tests/
 ├── templates/
-│   ├── embedFrame.ejs
-│   ├── embedFrame.html
+│   └── exportColumn.ejs
 ```
 
 ## Helpers used
@@ -59,6 +60,6 @@ pnpm --filter ep_etherpad-lite run test-ui
 
 ## Quick reference: hooks declared in `ep.json`
 
-* Server: `eejsBlock_htmlHead`, `expressCreateServer`, `eejsBlock_embedPopup`
+* Server: `eejsBlock_htmlHead`, `expressCreateServer`, `eejsBlock_exportColumn`, `eejsBlock_styles`
 
 When adding a hook, register it in both `ep.json` *and* the matching `exports.<hook> = ...` in the JS file.
