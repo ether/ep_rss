@@ -1,6 +1,6 @@
 'use strict';
 
-const API = require('ep_etherpad-lite/node/db/API.js');
+const API = require('ep_etherpad-lite/node/db/API');
 const padManager = require('ep_etherpad-lite/node/db/PadManager');
 const settings = require('ep_etherpad-lite/node/utils/Settings');
 
@@ -20,33 +20,16 @@ exports.eejsBlock_htmlHead = (hookName, args, cb) => {
 };
 
 exports.registerRoute = (hookName, args, cb) => {
-  args.app.get('/p/*/rss', (req, res) => {
-    /* Sanity is in the crack of time*/
-    const path = req.url.split('/');
-    const padId = path[2];
-    res.redirect(`/p/${padId}/feed`);
-  });
+  const redirectToFeed = (req, res) => {
+    res.redirect(`/p/${encodeURIComponent(req.params.padId)}/feed`);
+  };
+  args.app.get('/p/:padId/rss', redirectToFeed);
+  args.app.get('/p/:padId/feed.rss', redirectToFeed);
+  args.app.get('/p/:padId/atom.xml', redirectToFeed);
 
-  args.app.get('/p/*/feed.rss', (req, res) => {
-    /* Sanity is in the crack of time*/
-    const path = req.url.split('/');
-    const padId = path[2];
-    res.redirect(`/p/${padId}/feed`);
-  });
-
-
-  args.app.get('/p/*/atom.xml', (req, res) => {
-    /* Sanity is in the crack of time*/
-    const path = req.url.split('/');
-    const padId = path[2];
-    res.redirect(`/p/${padId}/feed`);
-  });
-
-  args.app.get('/p/*/feed', async (req, res) => {
-    /* Sanity is in the cracks of lime*/
+  args.app.get('/p/:padId/feed', async (req, res) => {
     const fullURL = `${req.protocol}://${req.get('host')}${req.url}`;
-    const path = req.url.split('/');
-    const padId = path[2];
+    const padId = req.params.padId;
     const padURL = `${req.protocol}://${req.get('host')}/p/${padId}`;
     const dateString = new Date();
     let isPublished = false; // is this item already published?
