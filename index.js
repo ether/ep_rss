@@ -1,5 +1,6 @@
 'use strict';
 
+const {Feed} = require('feed');
 const API = require('ep_etherpad-lite/node/db/API');
 const padManager = require('ep_etherpad-lite/node/db/PadManager');
 const settings = require('ep_etherpad-lite/node/utils/Settings');
@@ -9,9 +10,13 @@ if (!settings.rss) {
   console.log('ep_rss settings have not been configured');
 }
 
-const staleTime = settings.rss.staleTime || 300000; // 5 minutes, value should be set in settings
-const feeds = {}; // A nasty global
+// How long to serve a cached feed before regenerating. Bumped on every
+// pad edit anyway via the lastEdited check below, so this only affects
+// pads that haven't been edited recently.
+const staleTime = settings.rss.staleTime || 300000;
 
+// Per-pad cache: { lastEdited: number, body: string }.
+const feeds = {};
 
 exports.eejsBlock_htmlHead = (hookName, args, cb) => {
   args.content +=
@@ -28,79 +33,45 @@ exports.registerRoute = (hookName, args, cb) => {
   args.app.get('/p/:padId/atom.xml', redirectToFeed);
 
   args.app.get('/p/:padId/feed', async (req, res) => {
-    const fullURL = `${req.protocol}://${req.get('host')}${req.url}`;
     const padId = req.params.padId;
-    const padURL = `${req.protocol}://${req.get('host')}/p/${padId}`;
-    const dateString = new Date();
-    let isPublished = false; // is this item already published?
-    let text;
+    const origin = `${req.protocol}://${req.get('host')}`;
+    const padURL = `${origin}/p/${padId}`;
+    // Strip query string so the atom:self link matches the URL feed
+    // readers actually fetched (e.g. when they tack on cache-busters).
+    const feedURL = `${origin}${req.url.split('?')[0]}`;
 
-    /* When was this pad last edited and should we publish an RSS update? */
-    const message = await API.getLastEdited(padId);
-    const currTS = new Date().getTime();
-    if (!feeds[padId]) {
-      feeds[padId] = {};
+    const {lastEdited} = await API.getLastEdited(padId);
+    const now = Date.now();
+    const cached = feeds[padId];
+    if (cached && cached.lastEdited === lastEdited && now - cached.builtAt < staleTime) {
+      res.type('application/rss+xml');
+      res.send(cached.body);
+      return;
     }
 
-    // was the pad edited within the last 5 minutes?
-    if (currTS - message.lastEdited < staleTime) {
-      isPublished = isAlreadyPublished(padId, message.lastEdited);
+    const pad = await padManager.getPad(padId);
+    const feed = new Feed({
+      title: padId,
+      description: `Etherpad feed for ${padId}`,
+      id: padURL,
+      link: padURL,
+      language: 'en-us',
+      feedLinks: {rss: feedURL},
+      updated: new Date(lastEdited),
+    });
+    feed.addItem({
+      title: padId,
+      id: `${padURL}#${lastEdited}`,
+      link: padURL,
+      description: pad.text(),
+      date: new Date(lastEdited),
+    });
 
-      if (!isPublished) { // If it's not already published and it's gone stale
-        feeds[padId].lastEdited = message.lastEdited; // Add it to the timer object
-      }
-    } else {
-      if (!feeds[padId].feed) { // If it's not already stored in memory
-        console.debug('RSS Feed not already in memory so writing memory', feeds);
-        isPublished = false;
-        feeds[padId].lastEdited = message.lastEdited; // Add it to the timer object
-      } else {
-        isPublished = true;
-      }
-    }
-    if (!isPublished) {
-      const pad = await padManager.getPad(padId);
-      text = safe_tags(pad.text()).replace(/\n/g, '<br/>');
-    }
-
-    if (isPublished) {
-      console.debug(`Sending RSS from memory for ${padId}`);
-      res.contentType('rss');
-      res.send(feeds[padId].feed);
-    } else {
-      console.debug(`Building RSS for ${padId}`);
-      res.contentType('rss');
-      args.content = '<rss version="2.0" \n';
-      args.content += '   xmlns:content="http://purl.org/rss/1.0/modules/content/"\n';
-      args.content += '   xmlns:atom="http://www.w3.org/2005/Atom"\n';
-      args.content += '>\n';
-      args.content += '<channel>\n';
-      args.content += `<title>${padId}</title>\n`;
-      args.content += `<atom:link href="${fullURL}" rel="self" type="application/rss+xml" />`;
-      args.content += `<link>${padURL}</link>\n`;
-      args.content += '<description/>\n';
-      args.content += '<language>en-us</language>\n';
-      args.content += `<pubDate>${dateString}</pubDate>\n`;
-      args.content += `<lastBuildDate>${dateString}</lastBuildDate>\n`;
-      args.content += '<item>\n';
-      args.content += '<title>\n';
-      args.content += `${padId}\n`;
-      args.content += '</title>\n';
-      args.content += '<description>\n';
-      args.content += `<![CDATA[${text}]]>\n`;
-      args.content += '</description>\n';
-      args.content += `<link>${padURL}</link>\n`;
-      args.content += '</item>\n';
-      args.content += '</channel>\n';
-      args.content += '</rss>';
-      feeds[padId].feed = args.content;
-      res.send(args.content); // Send it to the requester
-    }
+    const body = feed.rss2();
+    feeds[padId] = {lastEdited, builtAt: now, body};
+    res.type('application/rss+xml');
+    res.send(body);
   });
+
   cb();
 };
-
-const safe_tags =
-    (str) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-const isAlreadyPublished = (padId, editTime) => (feeds[padId] === editTime);

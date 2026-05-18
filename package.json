@@ -19,6 +19,9 @@
     "type": "individual",
     "url": "https://etherpad.org/"
   },
+  "dependencies": {
+    "feed": "^5.2.1"
+  },
   "devDependencies": {
     "eslint": "^8.57.1",
     "eslint-config-etherpad": "^4.0.5",
