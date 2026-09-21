@@ -30,11 +30,5 @@
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint --fix ."
-  },
-  "pnpm": {
-    "overrides": {
-      "js-yaml@4": "^4.3.2",
-      "brace-expansion@1": "^1.1.16"
-    }
   }
 }
